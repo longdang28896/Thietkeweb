@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tra cứu Câu hỏi & Đáp án</title>
+    <style>
+        :root {
+            --primary-color: #2563eb;
+            --bg-color: #f8fafc;
+            --card-bg: #ffffff;
+            --text-color: #1e293b;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            line-height: 1.6;
+            margin: 0;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        h1 {
+            text-align: center;
+            color: var(--primary-color);
+            margin-bottom: 30px;
+        }
+
+        .search-box {
+            position: sticky;
+            top: 10px;
+            z-index: 100;
+            background: var(--card-bg);
+            padding: 15px;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+            margin-bottom: 30px;
+        }
+
+        input[type="text"] {
+            width: 100%;
+            padding: 12px 20px;
+            font-size: 16px;
+            border: 2px solid #e2e8f0;
+            border-radius: 8px;
+            outline: none;
+            box-sizing: border-box;
+            transition: border-color 0.3s;
+        }
+
+        input[type="text"]:focus {
+            border-color: var(--primary-color);
+        }
+
+        .question-card {
+            background: var(--card-bg);
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 15px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            transition: transform 0.2s;
+            display: block;
+        }
+
+        .question-card:hover {
+            transform: translateY(-2px);
+        }
+
+        .question-text {
+            font-weight: 600;
+            color: #334155;
+            margin-bottom: 10px;
+            display: block;
+        }
+
+        .answer-text {
+            color: #059669;
+            background: #ecfdf5;
+            padding: 8px 12px;
+            border-radius: 6px;
+            display: inline-block;
+            font-weight: 500;
+        }
+
+        .no-results {
+            text-align: center;
+            color: #94a3b8;
+            margin-top: 50px;
+            display: none;
+        }
+
+        mark {
+            background-color: #fef08a;
+            color: black;
+            padding: 0 2px;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1>📚 Tra cứu Đáp án Trắc nghiệm</h1>
+    
+    <div class="search-box">
+        <input type="text" id="searchInput" placeholder="Nhập câu hỏi hoặc nội dung đáp án cần tìm..." onkeyup="filterQuestions()">
+    </div>
+
+    <div id="questionList">
+        <!-- Dữ liệu sẽ được chèn vào đây bởi JS -->
+    </div>
+
+    <div id="noResults" class="no-results">Không tìm thấy câu hỏi nào phù hợp.</div>
+</div>
+
+<script>
+    const quizData = [
+        { q: "Cổng nào sau đây dùng cho việc gửi nhận các trang web?", a: "80" },
+        { q: "Phát biểu nào sau đây đúng?", a: "Tất cả các Web Server đều hiểu và chạy được các file *.htm và *.html." },
+        { q: "URL là viết tắt của cụm từ nào sau đây?", a: "Uniform Resource Location" },
+        { q: "Giao thức Internet là giao thức gì?", a: "TCP/IP" },
+        { q: "Tiền thân của Internet là mạng gì?", a: "APRANET" },
+        { q: "Loại website nào sau đây cho phép người dùng tương tác với website?", a: "Website động" },
+        { q: "Trình duyệt KHÔNG thực hiện nhiệm vụ sau?", a: "Truy cập cơ sở dữ liệu trên máy chủ" },
+        { q: "Website là gì?", a: "Website là bộ tập hợp các trang web có liên quan với nhau." },
+        { q: "DNS là từ viết tắt của cụm từ nào sau đây?", a: "Domain Name Server" },
+        { q: "Phát biểu nào sau đây không đúng về trang web?", a: "Giữa các trang web có các siêu liên kết (hyperlink), và chỉ cho phép người sử dụng có thể di chuyển từ trang này sang trang khác trong cùng một website" },
+        { q: "Phương án nào sau đây KHÔNG là ưu điểm của website tĩnh?", a: "Người dùng có thể tương tác với website" },
+        { q: "Giao thức nào sau đây là KHÔNG giao thức truyền tải thư tín điện tử?", a: "FTP" },
+        { q: "Giao thức nào được sử dụng để truyền tải siêu văn bản?", a: "HTTP" },
+        { q: "Phát biểu nào sau đây SAI về thương mại điện tử (TMĐT)?", a: "Thương mại điện tử là hoạt động mua-bán sản phẩm (hoặc dịch vụ) tại các chợ và siêu thị" },
+        { q: "Bước đầu tiên của quy trình xây dựng một website gì?", a: "Xác định yêu cầu và phân tích yêu cầu" },
+        { q: "Hệ thống điều hướng chính thường xuất hiện ở thành phần giao diện nào?", a: "Phần đầu trang (Website Header)" },
+        { q: "Quy trình xây dựng một website có bao nhiêu bước?", a: "6" },
+        { q: "Nội dung của trang web là?", a: "Các thành phần có trong trang web. Bao gồm văn bản, hình ảnh, âm thanh, video clip, ảnh động, các file" },
+        { q: "Phát biểu nào sau đây sai?", a: "Liên kết theo đường thẳng (tuyến tính) là loại liên kết phù hợp cho các website hướng người dùng đi theo thứ tự mà họ mong muốn" },
+        { q: "Việc xác định đối tượng độc giả của website là ai, được thực hiện ở bước nào của quy trình thiết kế website?", a: "Xác định yêu cầu và phân tích yêu cầu" },
+        { q: "Website thương mại điện tử là gì?", a: "Website thương mại điện tử là trang thông tin điện tử được thiết lập để phục vụ một phần hoặc toàn bộ quy trình của hoạt động mua bán hàng hóa hay cung ứng dịch vụ..." },
+        { q: "CTA là viết tắt của cụm từ nào?", a: "Call to Action" },
+        { q: "Thành phần nào là dấu hiệu giúp người đọc nhận biết đã đọc hết nội dung của trang web đang được mở?", a: "Phần chân trang (Website Footer)" },
+        { q: "Công cụ hỗ trợ tìm kiếm thường xuất hiện ở vị trí nào trên trang web?", a: "Phần đầu trang (Website Header)" },
+        { q: "Phát biểu nào sau đây KHÔNG ĐÚNG về chiến lược thiết kế website?", a: "Tăng tốc độ truy cập bằng cách tăng việc sử dụng hình ảnh và dữ liệu đa phương tiện (multimedia)" },
+        { q: "Đâu là ví dụ cho ý tưởng thiết kế hướng đến người sử dụng?", a: "Cho phép người dùng tăng kích thước chữ theo nhu cầu sử dụng" },
+        { q: "Logo KHÔNG nên đặt ở vị trí nào trên phần đầu của trang web?", a: "Phải" },
+        { q: "Thành phần Saturation trong chế độ màu HSB có ý nghĩa là gì?", a: "Độ bão hoà màu" },
+        { q: "Yếu tố nào sau đây KHÔNG ảnh hưởng khi lựa chọn màu sắc trong thiết kế web?", a: "Trình độ học vấn" },
+        { q: "Nên sử dụng gam màu nào khi muốn thể hiện ý tưởng tươi vui, cởi mở, kích động, thu hút người xem", a: "Gam màu nóng" },
+        { q: "CMYK là viết tắt của các màu nào?", a: "Cyan, Magenta, Yellow, Black" },
+        { q: "Chế độ màu nào sau đây thích hợp với chỉnh sửa ảnh kỹ thuật số?", a: "RGB" },
+        { q: "Phương pháp phối màu nào sau đây sử dụng 2 màu?", a: "Tương phản" },
+        { q: "Phương pháp phối màu nào sau đây có độ tương phản cao nhất?", a: "Tương phản" },
+        { q: "Hệ màu nào KHÔNG được sử dụng trong thiết kế?", a: "RYB" },
+        { q: "HSB là viết tắt của các thông số nào?", a: "Hue, Saturation, Brightness" },
+        { q: "Phương pháp phối màu nào sau đây sử dụng 3 màu?", a: "Tương đồng" },
+        { q: "Tỉ lệ vàng có giá trị bao nhiêu?", a: "1.618" },
+        { q: "Với hình chữ nhật có kích thước 1000px được áp dụng tỉ lệ vàng thì hình chữ nhật con bên trong có kích thước lớn nhất là bao nhiêu?", a: "616" },
+        { q: "Màu nào sau đây thuộc gam màu trung tính?", a: "Đen" },
+        { q: "Bánh xe màu cơ bản có bao nhiêu màu?", a: "12" },
+        { q: "Màu nào sau đây thuộc gam màu lạnh?", a: "Xanh nước biển" },
+        { q: "Phương pháp phối màu nào sau đây sử dụng ít hơn 3 màu?", a: "Vô sắc" },
+        { q: "Màu nào sau đây thuộc gam màu nóng?", a: "Vàng" },
+        { q: "Bánh xe màu được tạo nên từ những màu cơ bản nào?", a: "Red, Yellow, Blue" },
+        { q: "Cặp màu nào sau đây có độ tương phản cao nhất?", a: "Vàng – Xanh nước biển" },
+        { q: "Nếu tiêu đề chính có kích thước chữ 20pt thì nội dung có kích thước chữ là bao nhiêu pt nếu áp dụng tỉ lệ vàng?", a: "12" },
+        { q: "Nên sử dụng gam màu nào khi muốn thể hiện sự tươi tắn, toả sáng, gợi cảm giác mát mẻ, nhẹ nhàng?", a: "Gam màu lạnh" },
+        { q: "Kết hợp cặp màu nào sau đây sẽ tạo ra màu tím?", a: "Đỏ (red) + Xanh (blue)" },
+        { q: "Cặp màu nào sau đây không phải là cặp màu bổ sung?", a: "Trắng-Đỏ" },
+        { q: "Hệ màu nào tương thích với quang phổ mực in?", a: "CMYK" },
+        { q: "Phát biểu nào sau đây SAI?", a: "Các nền văn hoá khác nhau có chung quan điểm về ý nghĩa và cách sử dụng màu sắc." },
+        { q: "Phương pháp phối màu nào sau đây chỉ sử dụng 1 màu?", a: "Đơn sắc" },
+        { q: "Công cụ nào sau đây tạo ra các vùng chọn có dạng là các khối hình học bất kỳ?", a: "Polygon Lasso Tool" },
+        { q: "Công cụ nào sau đây không dùng để tô màu?", a: "Eraser Tool" },
+        { q: "Thao tác nào sau đây gộp tất cả các lớp có trong file Photoshop thành 1 lớp background?", a: "Flatten Image" },
+        { q: "Công cụ nào cho phép tạo ra các vùng chọn có hình dáng tự do?", a: "Lasso Tool" },
+        { q: "Bản vẽ phác thảo website là?", a: "Sketch" },
+        { q: "Công cụ nào sau đây cho phép thiết lập kiểu chữ mỹ thuật cho văn bản?", a: "Wrap Text" },
+        { q: "Công cụ nào sau đây cho phép nhập một đoạn nội dung văn bản?", a: "Type Tool" },
+        { q: "Nhóm công cụ nào sau đây cho phép tạo vùng chọn có dạng hình học cơ bản?", a: "Nhóm công cụ Marquee" },
+        { q: "Thao tác nào cho phép dán 2 hay nhiều lớp thành 1 lớp?", a: "Merge Visible" },
+        { q: "Nhóm bộ lọc nào cho phép thực hiện các thao tác làm nhoè ảnh?", a: "Blur" },
+        { q: "Nhóm bộ lọc nào cho phép thực hiện các thao tác làm biến dạng hình học một hình ảnh?", a: "Distort" },
+        { q: "Chế độ màu nào sau đây chỉ hỗ trợ thiết kế với các tông màu đen, xám, trắng?", a: "GrayScale" },
+        { q: "Chế độ hoà trộn nào sau đây được dùng để chỉnh cho bức ảnh tối hơn?", a: "Multiply" },
+        { q: "Công cụ nào cho phép nhập nội dung văn bản theo chiều dọc?", a: "Vertical Type Tool" },
+        { q: "Đơn vị đo độ phân giải hình ảnh là?", a: "ppi" },
+        { q: "Công cụ nào sau đây dùng để tô màu chuyển sắc?", a: "Gradient Tool" },
+        { q: "Khi khởi tạo file Photoshop, mục nào sau đây dùng để thiết lập hướng in của ảnh?", a: "Orientation" },
+        { q: "Công cụ nào sau đây cho phép cắt hình ảnh trong Photoshop thành các hình ảnh nhỏ hơn?", a: "Slice Tool" },
+        { q: "Tổ hợp phím nào sau đây sao chép và nhân bản layer?", a: "Ctrl+J" },
+        { q: "Thao tác nào sau đây xóa tất cả các slice đang có?", a: "View> Clear Slices" },
+        { q: "Tổ hợp phím nào được sử dụng để chuyển layer xuống dưới layer khác?", a: "Ctrl+[" },
+        { q: "Thẻ <caption> có chức năng gì?", a: "Tạo tiêu đề cho toàn bộ bảng, tiêu đề được căn giữa" },
+        { q: "Thẻ nào sau đây dùng để ngắt một đoạn văn bản và xuống một dòng mới?", a: "br" },
+        { q: "Bản thiết kế có độ trung thực cao nhất... có các hiệu ứng đi kèm, người dùng có thể tương tác... là?", a: "Prototype" },
+        { q: "Thao tác nào sau đây cho phép tạo nhát cắt từ layer?", a: "Layer > New Layer-based Slice" },
+        { q: "Khi có bức ảnh có độ tương phản cao giữa nền và nhân vật... Công cụ nào sau đây cho phép tạo vùng chọn dễ dàng hơn?", a: "Quick Selection Tool" },
+        { q: "Hệ màu nào được sử dụng phổ biến trong thiết kế website?", a: "RGB" },
+        { q: "Đoạn mã lệnh nào sau đây thiết lập bảng mã Unicode để hiển thị Tiếng Việt cho nội dung trang web?", a: "meta http-equiv=\"Content-Type\" content=\"text/html; charset=UTF-8\"" },
+        { q: "Thẻ nào sau đây tương đương thẻ b?", a: "strong" },
+        { q: "Lựa chọn nào khi xuất bản ảnh cho web sẽ cho phép tạo ra trang HTML với bố cục layout theo các slice đã cắt, nhưng hình ảnh không được hiển thị...?", a: "HTML only" }
+    ];
+
+    const listContainer = document.getElementById('questionList');
+
+    function displayQuestions(data) {
+        listContainer.innerHTML = '';
+        data.forEach((item, index) => {
+            const card = document.createElement('div');
+            card.className = 'question-card';
+            card.innerHTML = `
+                <span class="question-text">Câu ${index + 1}: ${item.q}</span>
+                <div class="answer-text">👉 Đáp án: ${item.a}</div>
+            `;
+            listContainer.appendChild(card);
+        });
+    }
+
+    function filterQuestions() {
+        const term = document.getElementById('searchInput').value.toLowerCase();
+        const filtered = quizData.filter(item => 
+            item.q.toLowerCase().includes(term) || 
+            item.a.toLowerCase().includes(term)
+        );
+
+        displayQuestions(filtered);
+
+        const noResults = document.getElementById('noResults');
+        if (filtered.length === 0) {
+            noResults.style.display = 'block';
+        } else {
+            noResults.style.display = 'none';
+        }
+    }
+
+    // Khởi tạo hiển thị lần đầu
+    displayQuestions(quizData);
+</script>
+
+</body>
+</html>
